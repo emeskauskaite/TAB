@@ -31,22 +31,15 @@ def nasdaq_get_stock_exchange_overall(nasdaq_stock_exchange_overall_url):
         
         date_value_list.append((date_str, value))
     
-    print(date_value_list)
     return date_value_list
 
 def update_excel_value(ws, row, value, red_fill):
-    """Update the Excel sheet with the provided value at the specified row."""
-    print(f"Updating value for row {row} with value {value}")
-    ws.write(row, 6, value, red_fill)  # Write new value and apply red fill
+    ws.write(row, 6, value, red_fill) 
 
 def compare_stock_overall(date_value_list, ws, df):
-    """Compare API data with Excel data and update accordingly."""
-    # Ensure dates in DataFrame are in datetime format for comparison
     df['A'] = pd.to_datetime(df['A'], format='%Y-%m-%d', errors='coerce')
 
-    # Find the newest date from the API data
     newest_date = max(datetime.datetime.strptime(date_str, '%Y-%m-%d') for date_str, _ in date_value_list)
-    print(f"Newest date from API: {newest_date}")
 
     # Create a set of API dates for quick lookup
     api_dates = {date_str for date_str, _ in date_value_list}
@@ -72,8 +65,6 @@ def compare_stock_overall(date_value_list, ws, df):
             excel_value = str(df.at[index, 'G']).replace(',', '.').strip().lower()
 
             if excel_value == 'wh':
-                # If the Excel value is 'wh', replace it with the API value
-                print(f"Replacing 'wh' with {formatted_value} for date {date_str}.")
                 update_excel_value(ws, index + 3, formatted_value, easyxf('pattern: pattern solid, fore_color red;'))
             else:
                 # Check if the excel_value is numeric
@@ -92,12 +83,10 @@ def compare_stock_overall(date_value_list, ws, df):
                 # If the existing value in Excel is different, update it
                 if float(formatted_value) != float(formatted_excel_value):
                     update_excel_value(ws, index + 3, formatted_value, easyxf('pattern: pattern solid, fore_color red;'))
-                else:
-                    print(f"Value for {date_str} is already up to date: {formatted_excel_value}")
+       
         else:
             # If no matching date is found, add a new row
             new_row_index = len(df) + 3  # Adjust new row index based on header rows
-            print(f"Adding new row for date {date_str} with value {formatted_value}")
             ws.write(new_row_index, 0, date_str)
             update_excel_value(ws, new_row_index, formatted_value, easyxf('pattern: pattern solid, fore_color red;'))
 
@@ -114,10 +103,8 @@ def write_wh_for_invalid_cells(ws, df, api_dates, newest_date):
         # Check if the date is before the newest date and there's no corresponding API value
         if excel_date < newest_date and excel_date.strftime('%Y-%m-%d') not in api_dates:
             if excel_value != 'wh':  # Only write 'wh' if it isn't already there
-                print(f"Setting value for {excel_date} to 'wh'.")
                 ws.write(index + 3, 6, 'wh', easyxf('pattern: pattern solid, fore_color red;'))  # Write 'wh' and apply red fill
-            else:
-                print(f"Value for {excel_date} is already 'wh', skipping.")
+
 
 # Helper function to determine if a string can be converted to a float
 def is_number(s):
